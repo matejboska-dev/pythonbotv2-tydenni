@@ -1,3 +1,5 @@
+# pip install beautifulsoup4 requests schedule smtplib email
+
 import json
 import smtplib
 import schedule
@@ -10,21 +12,18 @@ from bs4 import BeautifulSoup
 import re
 
 URL = "https://strav.nasejidelna.cz/0341/login"
-NODE_ENDPOINT = "http://localhost:8080/api/weekly-menu"  # upravit podle skutecnyho endpointu
+NODE_ENDPOINT = ""  # dej sem real endpoint
 
-# konfigurace pro email
-EMAIL_HOST = "smtp.example.com"  # nahradit skutecnym smtp serverem
+EMAIL_HOST = ""  #
 EMAIL_PORT = 587
-EMAIL_USER = "jidelna@example.com"  # nahradit skutecnym emailem
-EMAIL_PASSWORD = "heslo123"  # nahradit skutecnym heslem
-SENDER_EMAIL = "jidelna@example.com"  # nahradit skutecnym emailem odesilatele
-
+EMAIL_USER = ""  
+EMAIL_PASSWORD = ""  
+SENDER_EMAIL = ""  
 # seznam odberatelu (v produkci by mel byt nacitan z db)
 subscribers = []
 
 
 def scrape_weekly_menu():
-    """scrapuje jidelnicek pro celej tyden"""
     response = requests.get(URL)
     if response.status_code != 200:
         print(f"error pri ziskavani dat: {response.status_code}")
@@ -82,7 +81,7 @@ def scrape_weekly_menu():
 
 
 def send_to_node_endpoint(data):
-    """odesila data na node.js endpoint"""
+
     try:
         headers = {'Content-Type': 'application/json'}
         response = requests.post(NODE_ENDPOINT, json=data, headers=headers)
@@ -98,7 +97,6 @@ def send_to_node_endpoint(data):
 
 
 def format_menu_for_email(menu_data):
-    """formatuje menu data pro email"""
     html = """
     <html>
     <head>
@@ -149,7 +147,6 @@ def format_menu_for_email(menu_data):
 
 
 def send_newsletter():
-    """odesle newsletter vsem prihlasenymm odberatelum"""
     menu_data = scrape_weekly_menu()
     if not menu_data or not menu_data["Ječná"]:
         print("nepodarilo se ziskat data pro newsletter")
@@ -182,7 +179,6 @@ def send_newsletter():
 
 
 def add_subscriber(email):
-    """prida noveho odberatele do seznamu"""
     if email not in subscribers:
         subscribers.append(email)
         return True
@@ -190,7 +186,6 @@ def add_subscriber(email):
 
 
 def remove_subscriber(email):
-    """odstrani odberatele ze seznamu"""
     if email in subscribers:
         subscribers.remove(email)
         return True
@@ -198,15 +193,13 @@ def remove_subscriber(email):
 
 
 def weekly_task():
-    """tydenni uloha - scrapovani menu a odeslani na node endpoint"""
     print(f"running weekly task: {datetime.now()}")
     menu_data = scrape_weekly_menu()
     
     if menu_data and menu_data["Ječná"]:
         # odeslani dat na node endpoint
         send_to_node_endpoint(menu_data)
-        
-        # odeslani newsletteru prihlesenym uzivatelum
+    
         if subscribers:
             send_newsletter()
     else:
@@ -214,5 +207,4 @@ def weekly_task():
 
 
 if __name__ == "__main__":
-    # spustime prvni scrapovani ihned
     weekly_task()
